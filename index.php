@@ -30,22 +30,25 @@ function get_ghost_post_from_drupal_node($drupal_node, $duplicate_tag_correction
 	$obj->id = (int)$drupal_node->nid;
 	$obj->title = $drupal_node->title;
 	$obj->slug = $drupal_node->title;
-	$obj->html = $drupal_node->body["und"][0]["value"];
 	$obj->markdown = (new HTML_To_Markdown(stripslashes($obj->html), array('strip_tags' => true)))->output();
-	$obj->image = "";
-	$obj->featured = false;		#TODO
-	$obj->page = false;
-	$obj->status = "published";	#TODO
+	$obj->html = $drupal_node->body["und"][0]["value"];
+	$obj->image = NULL;
+	$obj->featured = $drupal_node->sticky === "1";
+	$obj->page = false;	#We only support posts right now
+	$obj->status = $drupal_node->status === "1" ? "published" : "draft";
 	$obj->language = "en_US";
-	$obj->meta_title = "";
-	$obj->meta_description = "";
-	$obj->author_id = 1;		#TODO
+	$obj->meta_title = NULL;
+	$obj->meta_description = NULL;
+
+	#Ghost has only one user right now
+
+	$obj->author_id = 1;
 	$obj->created_at = 1000 * (int)$drupal_node->created;
-	$obj->created_by = 1;		#TODO
+	$obj->created_by = 1;
 	$obj->updated_at = 1000 * (int)$drupal_node->changed;
-	$obj->updated_by = 1;		#TODO
+	$obj->updated_by = 1;
 	$obj->published_at = 1000 * (int)$drupal_node->created;
-	$obj->created_by = 1;		#TODO
+	$obj->created_by = 1;
 
 	$posts_tags = get_posts_tags($drupal_node, $duplicate_tag_correction);
 
@@ -82,23 +85,10 @@ function get_ghost_tags_from_drupal_vocabularies($drupal_vocabs) {
 	return array("tags" => $tags, "duplicate_tag_correction" => $duplicate_tag_correction);
 }
 
-#function merge_duplicate_tags(&$ghost_tags, &$ghost_posts_tags) {
-#	tags_to_delete = array();
-#	foreach ($ghost_tags as $ghost_tag) {
-#		$id = $ghost_tag["id"];
-#		$slug = $ghost_tag["slug"];
-#
-#		foreach ($ghost_tags as $other) {
-#			$other_id = $other["id"];
-#			if ($other_id === $id)	continue;
-#			
-#			$other_slug = $other["slug"];
-#			if ($other_slug === $slug) {
-#				
-#			}
-#		}
-#	}
-#}
+
+###########################
+########## MAIN ###########
+###########################
 
 $taxonomy_terms_file = "/tmp/data_export_import/taxonomy_terms/20140622_100022_taxonomy_terms.dataset";
 $nodes_file = "/tmp/data_export_import/nodes/20140622_100016_nodes_story.dataset";
@@ -141,8 +131,6 @@ $ghost_meta["version"] = "000";
 
 $ghost_import["data"] = $ghost_data;
 $ghost_import["meta"] = $ghost_meta;
-
-#merge_duplicate_tags($ghost_import["data"]["tags"], $ghost_import["data"]["posts_tags"]);
 
 echo(json_encode($ghost_import));
 ?>
