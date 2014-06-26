@@ -16,8 +16,9 @@ function get_posts_tags($drupal_node, $duplicate_tag_correction) {
 				$tag_id = (int)$tag["tid"];
 				if (array_key_exists($tag_id, $duplicate_tag_correction)) {
 					$tag_id = $duplicate_tag_correction[$tag_id];
+					error_log("Using duplicate mapping " . $tag_id . " for " . $tag["tid"]);
 				}
-				$posts_tags[] = array("tag_id" => (int)$tag["tid"], "post_id" => (int)$node_id);
+				$posts_tags[] = array("tag_id" => $tag_id, "post_id" => (int)$node_id);
 			}
 		}
 	}
@@ -30,8 +31,8 @@ function get_ghost_post_from_drupal_node($drupal_node, $duplicate_tag_correction
 	$obj->id = (int)$drupal_node->nid;
 	$obj->title = $drupal_node->title;
 	$obj->slug = $drupal_node->title;
-	$obj->markdown = (new HTML_To_Markdown(stripslashes($obj->html), array('strip_tags' => true)))->output();
 	$obj->html = $drupal_node->body["und"][0]["value"];
+	$obj->markdown = (new HTML_To_Markdown(stripslashes($obj->html), array('strip_tags' => true)))->output();
 	$obj->image = NULL;
 	$obj->featured = $drupal_node->sticky === "1";
 	$obj->page = false;	#We only support posts right now
@@ -56,9 +57,10 @@ function get_ghost_post_from_drupal_node($drupal_node, $duplicate_tag_correction
 }
 
 function in_array_by_key($needle, $haystack, $key) {
-	foreach ($haystack as $k => $element) {
+	foreach ($haystack as $element) {
 		if ($element[$key] === $needle[$key]) {
-			return $k;
+			error_log($element[$key] . " matches " . $needle[$key]);
+			return $element["id"];
 		}
 	}
 	return false;
@@ -75,6 +77,8 @@ function get_ghost_tags_from_drupal_vocabularies($drupal_vocabs) {
 			$tag["description"] = $term->description;
 
 			if ($key_of_original = in_array_by_key($tag, $tags, "slug")) {
+				error_log("Detected duplicate tag " . $tag["name"] . " for slug " . $tag["slug"]);
+				error_log("Mapping duplicate tag " . $tag["id"] . " to original " . $key_of_original);
 				$duplicate_tag_correction[(int)$tag["id"]] = (int)$key_of_original;
 			} else {
 				$tags[] = $tag;
