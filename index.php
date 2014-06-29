@@ -1,141 +1,50 @@
-<?php
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-require_once(dirname(__FILE__) . '/HTML_To_Markdown.php');
+    <title>Migrate your Drupal posts into Ghost</title>
 
-function startsWith($haystack, $needle)
-{
-    return $needle === "" || strpos($haystack, $needle) === 0;
-}
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
-function get_posts_tags($drupal_node, $duplicate_tag_correction) {
-	$node_id = $drupal_node->nid;
-	$posts_tags = array();
-	foreach(get_object_vars($drupal_node) as $key => $value) {
-		if (startsWith($key, "taxonomy_vocabulary_")) {
-			foreach($value["und"] as $tag) {
-				$tag_id = (int)$tag["tid"];
-				if (array_key_exists($tag_id, $duplicate_tag_correction)) {
-					$tag_id = $duplicate_tag_correction[$tag_id];
-					error_log("Using duplicate mapping " . $tag_id . " for " . $tag["tid"]);
-				}
-				$posts_tags[] = array("tag_id" => $tag_id, "post_id" => (int)$node_id);
-			}
-		}
-	}
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
 
-	return $posts_tags;
-}
+  <body role="document">
+    <div class="container">
+      <div class="starter-template">
+        <h1>Easily migrate your Drupal posts to <a href="http://ghost.org">Ghost</a></h1>
+        <hr />
+        <ol>
+          <li><p class="lead">Install the <a href="https://drupal.org/project/data_export_import">data_export_import</a> Drupal module</p></li>
+          <li><p class="lead">Export nodes and taxonomy to a dataset file and download them</p></li>
+          <li><p class="lead">Upload these dataset files here and submit</p></li>
+        </ol>
 
-function get_ghost_post_from_drupal_node($drupal_node, $duplicate_tag_correction) {
-	$obj = new stdClass();
-	$obj->id = (int)$drupal_node->nid;
-	$obj->title = $drupal_node->title;
-	$obj->slug = $drupal_node->title;
-	$obj->html = $drupal_node->body["und"][0]["value"];
-	$obj->markdown = (new HTML_To_Markdown(stripslashes($obj->html), array('strip_tags' => true)))->output();
-	$obj->image = NULL;
-	$obj->featured = $drupal_node->sticky === "1";
-	$obj->page = false;	#We only support posts right now
-	$obj->status = $drupal_node->status === "1" ? "published" : "draft";
-	$obj->language = "en_US";
-	$obj->meta_title = NULL;
-	$obj->meta_description = NULL;
+        <form action="convert.php" method="post" enctype= "multipart/form-data"><br>
+          <p class="lead">Nodes dataset: <input class="btn btn-lg btn-default" type="file" name="nodesDataset"></p>
+          <p class="lead">Taxonomy dataset: <input class="btn btn-lg btn-default" type="file" name="taxonomyDataset"></p>
+          <input class="btn btn-lg btn-default" type="submit">
+        </form>
+      </div>
 
-	#Ghost has only one user right now
-
-	$obj->author_id = 1;
-	$obj->created_at = 1000 * (int)$drupal_node->created;
-	$obj->created_by = 1;
-	$obj->updated_at = 1000 * (int)$drupal_node->changed;
-	$obj->updated_by = 1;
-	$obj->published_at = 1000 * (int)$drupal_node->created;
-	$obj->created_by = 1;
-
-	$posts_tags = get_posts_tags($drupal_node, $duplicate_tag_correction);
-
-	return array("posts" => $obj, "posts_tags" => $posts_tags);
-}
-
-function in_array_by_key($needle, $haystack, $key) {
-	foreach ($haystack as $element) {
-		if ($element[$key] === $needle[$key]) {
-			error_log($element[$key] . " matches " . $needle[$key]);
-			return $element["id"];
-		}
-	}
-	return false;
-}
-
-function get_ghost_tags_from_drupal_vocabularies($drupal_vocabs) {
-	$tags = array();
-	$duplicate_tag_correction = array();
-	foreach ($drupal_vocabs["vocabulary_terms"] as $vocabulary) {
-		foreach ($vocabulary as $id => $term) {
-			$tag["id"] = $id;
-			$tag["name"] = $term->name;
-			$tag["slug"] = strtolower(str_replace(".", "-", str_replace(" ", "-", $term->name)));
-			$tag["description"] = $term->description;
-
-			if ($key_of_original = in_array_by_key($tag, $tags, "slug")) {
-				error_log("Detected duplicate tag " . $tag["name"] . " for slug " . $tag["slug"]);
-				error_log("Mapping duplicate tag " . $tag["id"] . " to original " . $key_of_original);
-				$duplicate_tag_correction[(int)$tag["id"]] = (int)$key_of_original;
-			} else {
-				$tags[] = $tag;
-			}
-		}
-	}
-
-	return array("tags" => $tags, "duplicate_tag_correction" => $duplicate_tag_correction);
-}
-
-
-###########################
-########## MAIN ###########
-###########################
-
-$taxonomy_terms_file = "/tmp/data_export_import/taxonomy_terms/20140622_100022_taxonomy_terms.dataset";
-$nodes_file = "/tmp/data_export_import/nodes/20140622_100016_nodes_story.dataset";
-$users_file = "/tmp/data_export_import/users/20140622_100026_users.dataset";
-
-###########################
-########## TAGS ###########
-###########################
-
-$ghost_tags_and_duplicates = get_ghost_tags_from_drupal_vocabularies(unserialize(file_get_contents($taxonomy_terms_file)));
-$ghost_data["tags"] = $ghost_tags_and_duplicates["tags"];
-$duplicate_tag_correction = $ghost_tags_and_duplicates["duplicate_tag_correction"];
-
-###########################
-########## NODES ##########
-###########################
-
-$nodes_handle = fopen($nodes_file, "r");
-$content_type = fgets($nodes_handle);	//We don't give a damn about this
-
-$ghost_posts_array = array();
-$ghost_posts_tags_array = array();
-while ($node_content = fgets($nodes_handle)) {
-	$ghost_posts_and_posts_tags = get_ghost_post_from_drupal_node(unserialize(base64_decode($node_content)), $duplicate_tag_correction);
-	$ghost_posts_array[] = $ghost_posts_and_posts_tags["posts"];
-	$ghost_posts_tags_array = array_merge($ghost_posts_tags_array,$ghost_posts_and_posts_tags["posts_tags"]);
-}
-
-$ghost_data["posts"] = $ghost_posts_array;
-$ghost_data["posts_tags"] = $ghost_posts_tags_array;
-
-fclose($nodes_handle);
-
-###########################
-########## FINAL ##########
-###########################
-
-$ghost_meta["exported_on"] = 1000 * time();
-$ghost_meta["version"] = "000";
-
-$ghost_import["data"] = $ghost_data;
-$ghost_import["meta"] = $ghost_meta;
-
-echo(json_encode($ghost_import));
-?>
+    </div>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  </body>
+</html>
 
