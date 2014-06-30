@@ -20,21 +20,40 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
   </head>
+  <style type="text/css">
+    .container {
+      width: 100%;
+    }
+    .starter-template {
+
+    }
+    .title {
+      text-align: center;
+    }
+    .steps {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #eee;
+      padding: 10px 10px 10px 30px;
+    } 
+  </style>
 
   <body role="document">
     <div class="container">
-      <div class="starter-template">
-        <h1>Easily migrate your Drupal posts to <a href="http://ghost.org">Ghost</a></h1>
+      <div class="starter-template col-md-6 col-md-offset-3">
+        <h1 class="title">Easily migrate your Drupal posts to <a href="http://ghost.org">Ghost</a></h1>
         <hr />
-        <ol>
+        <ol class="steps">
           <li><p class="lead">Install the <a href="https://drupal.org/project/data_export_import">data_export_import</a> Drupal module</p></li>
           <li><p class="lead">Export nodes and taxonomy to a dataset file and download them</p></li>
           <li><p class="lead">Upload these dataset files here and submit</p></li>
         </ol>
 
         <form action="convert.php" method="post" enctype= "multipart/form-data"><br>
-          <p class="lead">Nodes dataset: <input class="btn btn-lg btn-default" type="file" name="nodesDataset"></p>
-          <p class="lead">Taxonomy dataset: <input class="btn btn-lg btn-default" type="file" name="taxonomyDataset"></p>
+          <div class="row">
+            <div class="lead col-md-6">Nodes dataset: <input class="btn btn-lg btn-default" type="file" name="nodesDataset"></div>
+            <div class="lead col-md-6">Taxonomy dataset: <input class="btn btn-lg btn-default" type="file" name="taxonomyDataset"></div>
+          </div>
           <input class="btn btn-lg btn-default" type="submit">
         </form>
       </div>
