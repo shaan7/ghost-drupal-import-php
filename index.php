@@ -48,6 +48,7 @@
           <li><p class="lead">Install the <a href="https://drupal.org/project/data_export_import">data_export_import</a> Drupal module</p></li>
           <li><p class="lead">Export nodes and taxonomy to a dataset file and download them</p></li>
           <li><p class="lead">Upload these dataset files here and submit</p></li>
+          <li><p class="lead">Once you downloaded ghost.json, use it on http://yourghostblog/ghost/debug to import</p></li>
         </ol>
 
         <form action="convert.php" method="post" enctype= "multipart/form-data"><br>
