@@ -135,6 +135,23 @@ $ghost_meta["version"] = "000";
 $ghost_import["data"] = $ghost_data;
 $ghost_import["meta"] = $ghost_meta;
 
-echo(json_encode($ghost_import));
+$final_ghost_json = json_encode($ghost_import);
+
+if (empty($final_ghost_json)) {
+	echo "Oops something went wrong :/";
+} else {
+	header('Content-Description: File Transfer');
+	header('Content-Type: application/octet-stream');
+	header('Content-Disposition: attachment; filename=ghost.json');
+	header('Content-Transfer-Encoding: binary');
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	header('Content-Length: ' . strlen($final_ghost_json));
+	ob_clean();
+	flush();
+	echo ($final_ghost_json);
+	exit;
+}
 ?>
 
