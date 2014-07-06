@@ -41,12 +41,12 @@
   <body role="document">
     <div class="container">
       <div class="starter-template col-md-6 col-md-offset-3">
-        <h1 class="title">Easily migrate your <a href="http://drupal.org">Drupal</a> posts to <a href="http://ghost.org">Ghost</a></h1>
+        <h1 class="title">Easily migrate your <a href="http://drupal.org">Drupal 7</a> posts to <a href="http://ghost.org">Ghost</a></h1>
         <img src="drupal-to-ghost.png" width="99%" />
         <hr />
         <ol class="steps">
           <li><p class="lead">Install the <a href="https://drupal.org/project/data_export_import">data_export_import</a> Drupal module</p></li>
-          <li><p class="lead">Export nodes and taxonomy to a dataset file and download them</p></li>
+          <li><p class="lead">Export nodes and taxonomy to dataset files and download them</p></li>
           <li><p class="lead">Upload these dataset files here and submit</p></li>
           <li><p class="lead">Once you downloaded ghost.json, use it on http://yourghostblog/ghost/debug to import</p></li>
         </ol>

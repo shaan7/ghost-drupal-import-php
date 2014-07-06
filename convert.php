@@ -27,11 +27,12 @@ function get_posts_tags($drupal_node, $duplicate_tag_correction) {
 }
 
 function get_ghost_post_from_drupal_node($drupal_node, $duplicate_tag_correction) {
+	#echo(json_encode($drupal_node));
 	$obj = new stdClass();
 	$obj->id = (int)$drupal_node->nid;
 	$obj->title = $drupal_node->title;
 	$obj->slug = $drupal_node->title;
-	$obj->html = $drupal_node->body["und"][0]["value"];
+	$obj->html = $drupal_node->body;
 	$obj->markdown = (new HTML_To_Markdown(stripslashes($obj->html), array('strip_tags' => true)))->output();
 	$obj->image = NULL;
 	$obj->featured = $drupal_node->sticky === "1";
@@ -136,6 +137,7 @@ $ghost_import["data"] = $ghost_data;
 $ghost_import["meta"] = $ghost_meta;
 
 $final_ghost_json = json_encode($ghost_import);
+#$final_ghost_json = "";
 
 if (empty($final_ghost_json)) {
 	echo "Oops something went wrong :/";
