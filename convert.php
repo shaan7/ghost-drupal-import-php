@@ -7,20 +7,31 @@ function startsWith($haystack, $needle)
     return $needle === "" || strpos($haystack, $needle) === 0;
 }
 
+function get_ghost_posts_tags_for_tag($node_id, $tag, $duplicate_tag_correction) {
+	$tag_id = (int)$tag["tid"];
+	if (array_key_exists($tag_id, $duplicate_tag_correction)) {
+		$tag_id = $duplicate_tag_correction[$tag_id];
+		error_log("Using duplicate mapping " . $tag_id . " for " . $tag["tid"]);
+	}
+	return array("tag_id" => $tag_id, "post_id" => (int)$node_id);
+}
+
 function get_posts_tags($drupal_node, $duplicate_tag_correction) {
 	$node_id = $drupal_node->nid;
 	$posts_tags = array();
+
+	//Drupal7
 	foreach(get_object_vars($drupal_node) as $key => $value) {
 		if (startsWith($key, "taxonomy_vocabulary_")) {
 			foreach($value["und"] as $tag) {
-				$tag_id = (int)$tag["tid"];
-				if (array_key_exists($tag_id, $duplicate_tag_correction)) {
-					$tag_id = $duplicate_tag_correction[$tag_id];
-					error_log("Using duplicate mapping " . $tag_id . " for " . $tag["tid"]);
-				}
-				$posts_tags[] = array("tag_id" => $tag_id, "post_id" => (int)$node_id);
+				$posts_tags[] = get_ghost_posts_tags_for_tag($node_id, $tag, $duplicate_tag_correction);
 			}
 		}
+	}
+
+	//Drupal6
+	foreach($drupal_node->taxonomy as $tag) {
+		$posts_tags[] = get_ghost_posts_tags_for_tag($node_id, get_object_vars($tag), $duplicate_tag_correction);
 	}
 
 	return $posts_tags;
@@ -31,7 +42,14 @@ function get_ghost_post_from_drupal_node($drupal_node, $duplicate_tag_correction
 	$obj->id = (int)$drupal_node->nid;
 	$obj->title = $drupal_node->title;
 	$obj->slug = $drupal_node->title;
-	$obj->html = $drupal_node->body["und"][0]["value"];
+
+	if (is_string($drupal_node->body)) {
+		error_log("Detected Drupal6");
+		$obj->html = $drupal_node->body;	//Drupal6
+	} else {
+		$obj->html = $drupal_node->body["und"][0]["value"];	//Drupal7
+	}
+
 	$obj->markdown = (new HTML_To_Markdown(stripslashes($obj->html), array('strip_tags' => true)))->output();
 	$obj->image = NULL;
 	$obj->featured = $drupal_node->sticky === "1";

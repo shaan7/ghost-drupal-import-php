@@ -41,7 +41,7 @@
   <body role="document">
     <div class="container">
       <div class="starter-template col-md-6 col-md-offset-3">
-        <h1 class="title">Easily migrate your <a href="http://drupal.org">Drupal 7</a> posts to <a href="http://ghost.org">Ghost</a></h1>
+        <h1 class="title">Easily migrate your <a href="http://drupal.org">Drupal</a> posts to <a href="http://ghost.org">Ghost</a></h1>
         <img src="drupal-to-ghost.png" width="99%" />
         <hr />
         <ol class="steps">
@@ -62,6 +62,7 @@
         <hr />
         <div class="well">
           <ul>
+            <li>Drupal 6 and Drupal 7 are supported</li>
             <li><a href="http://ghost.org">Ghost</a> doesn't support importing users (yet)</li>
             <li>Your data is not stored on the server, everything is processed in-memory</li>
             <li>Brought to you by <a href="http://www.shantanutushar.com">Shantanu Tushar</a> and <a href="https://github.com/dpacmittal">Deepak Mittal</a></li>
